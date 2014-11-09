@@ -1,6 +1,8 @@
 __author__ = 'nikhilraju'
 import os
+import datetime
 from pymongo import MongoClient
+from createFeatureVectors import createFv
 
 def createDict(dict, dir):
     #filepath = '%s/articles/%s/' %(os.getcwd(),dir)
@@ -17,7 +19,7 @@ def createDict(dict, dir):
                     for words in allWords:
                         dict.add(words)
 
-def main():
+def init():
     dict = set()
     createDict(dict, 'train')
     print 'finished train'
@@ -31,9 +33,14 @@ def main():
     print 'finished test3'
     print len(dict)
 
-
     features_coll = MongoClient('localhost',27017)['aml']['features']
-    features_coll.insert({'_id':'1','date':'11/8/2014','featureList':list(dict)})
+    features_coll.update({'_id':'1'},{'$set':{'timeStamp':datetime.datetime.now(),'featureList':list(dict)}},True)
+
+def main():
+    init()
+    createFv()
+
+
 
 if __name__=="__main__":
     main()

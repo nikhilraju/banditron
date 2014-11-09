@@ -8,3 +8,12 @@ explore with a probability γ by replacing one (or maybe more) labels with a ran
 ranked lower by our model. This can be applied to a lot of real world applications such as
 recommendation systems where a user is recommended r relevant items with some random
 items included.
+
+
+####################
+Requirements
+####################
+
+1. Mongo (To avoid I/O reads from local file system, we are using MongoDB to store data)
+
+2. PyMongo
