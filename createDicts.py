@@ -53,6 +53,7 @@ class Banditron:
 
             currFv = []
             count = 0
+            sum = 0
             with open('%s%s' %(filepath, filename)) as eachFile:
                 lineNo = 0
                 count += 1
@@ -68,6 +69,7 @@ class Banditron:
                         allWords = line[:-1].split(' ')
 
                         for word in allWords:
+                            sum += 1
                             currDocDictionary.setdefault(0.0)
                             currDocDictionary[word] += 1.0
                             #adding a tuple   (index in feature_list,count) as a sparse representation
@@ -79,6 +81,7 @@ class Banditron:
 
                 for word in currDocDictionary:
                     if word != 0.0:
+                        currDocDictionary[word] = currDocDictionary[word] / sum
                         currFv.append((feature_list.index(word),currDocDictionary[word]))
 
 
