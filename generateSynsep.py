@@ -24,7 +24,7 @@ class SynSep:
 					count += 1
 			self.mongo.update({'_id':SYNSEP_CATEGORY_MAPPING[i]},{'$set':{'timeStamp':datetime.datetime.now(),'featureList':label_vectors,'bitson':count}},True)
 
-	def generateData(self):
+	def generateSynSepData(self):
 		random_vector = random.randint(1,len(SYNSEP_CATEGORY_MAPPING))
 		featureVector = self.mongo.find({'_id':str(random_vector)})[0]['featureList']
 		turned_on_bits = self.mongo.find({'_id':str(random_vector)})[0]['bitson']
@@ -37,12 +37,14 @@ class SynSep:
 				featureVector[i] = 1
 		return featureVector
 
-
+	def generateSynNonSepData(self):
+		featureVector = self.generateSynSepData
+		#introduce a 5% label noise
 
 def main():
 	synsep = SynSep()
 	synsep.createLabel()
-	print synsep.generateData()
+	print synsep.generateSynSepData()
 
 if __name__=="__main__":
 	main()
