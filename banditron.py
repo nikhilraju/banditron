@@ -1,11 +1,13 @@
 from pymongo import MongoClient
 import random
 
-CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
+REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
+SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def get_category_index(label):
-    for i in range(0,len(CATEGORY_MAPPING)):
-        if label == CATEGORY_MAPPING[i]:
+    for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
+        if label == REUTERS_CATEGORY_MAPPING[i]:
             return i
     return -1
 
@@ -19,7 +21,7 @@ class Banditron:
 
     def init_weights(self):
         weights = []
-        for i in range(0,len(CATEGORY_MAPPING)):
+        for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
             weights.append([0.0] * len(self.dict))
         return weights
 
@@ -87,7 +89,7 @@ def main():
     for t in range(0,len(doc_ids)):
         doc_id = doc_ids[t]
         feature_vectors = banditron.mongo.find({'_id':str(doc_id)})[0]['featureList']
-        true_label = get_category_index(banditron.mongo.find({'_id':doc_id})[0]['label'])
+        true_label = get_category_index(banditron.mongo.find({'_id':str(doc_id)})[0]['label'])
         banditron.run(doc_id, feature_vectors, true_label)
 
 if __name__=="__main__":
