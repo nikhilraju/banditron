@@ -43,7 +43,10 @@ class SynSep:
 
 def main():
 	synsep = SynSep()
+    #called only once
 	synsep.createLabel()
+
+    # for every round, generate needs to be called depending on how many docs you need
 	print synsep.generateSynSepData()
 
 if __name__=="__main__":
