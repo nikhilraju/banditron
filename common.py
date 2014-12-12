@@ -21,10 +21,30 @@ def add_document_id_field():
             doc_id = f.readline().split()[1]
             features_coll.update({'_id': filename}, {'$set':{'docId': doc_id}})
 
+def create_doc_label_map():
+
+    doc_labels = {}
+    f = open('topic_article_mapping.txt')
+
+    for line in f.readlines():
+        (label, docId) = line.strip().split(' ')
+        doc_labels[docId] = label
+
+    #685071 entries in this mapping dictionary
+    coll = MongoClient('localhost',27017)['aml']['features']
+
+    count = 0
+    for d in doc_labels.keys():
+        coll.update({'docId': d}, {'$set': {'true_label': doc_labels[d]}})
+        count += 1
+        if count%1000 == 0:
+            print count, ' documents updated with true labels....', len(doc_labels) - count, ' to go '
+
 
 def main():
-    add_document_id_field()
-
+    #add_document_id_field()
+    print 'Adding true labels'
+    create_doc_label_map()
 if __name__ == "__main__":
     main()
 
