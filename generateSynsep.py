@@ -35,7 +35,7 @@ class SynSep:
 		for i in range(self.rareWords, self.noOfFeatures):
 			if(random.randint(0,self.commonWords-1) < 20):
 				featureVector[i] = 1
-		return featureVector
+		return featureVector, random_vector
 
 	def generateSynNonSepData(self):
 		featureVector = self.generateSynSepData
@@ -43,11 +43,7 @@ class SynSep:
 
 def main():
 	synsep = SynSep()
-    #called only once
 	synsep.createLabel()
-
-    # for every round, generate needs to be called depending on how many docs you need
-	print synsep.generateSynSepData()
 
 if __name__=="__main__":
 	main()

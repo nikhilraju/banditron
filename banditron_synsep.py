@@ -1,22 +1,23 @@
 from pymongo import MongoClient
 import random
+from generateSynsep import SynSep
 
-REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
-#SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-#SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+#REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
+SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def get_category_index(label):
-    for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-        if label == REUTERS_CATEGORY_MAPPING[i]:
+    for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
+        if label == SYNSEP_CATEGORY_MAPPING[i]:
             return i
     return -1
 
 class Banditron:
 
     def __init__(self):
-        self.gamma = 0.05
+        self.gamma = 0.014
         self.mongo = MongoClient('localhost',27017)['aml']['features']
-        self.dict = self.mongo.find({'_id':'1'})[0]['featureList']
+        self.dict_length = 400
         self.weights = self.init_weights()
         self.error_rate = 0.0
         self.correct_classified = 0.0
@@ -25,8 +26,8 @@ class Banditron:
 
     def init_weights(self):
         weights = []
-        for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-            weights.append([0.0] * len(self.dict))
+        for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
+            weights.append([0.0] * self.dict_length)
         return weights
 
     def update_weights(self, update_matrix):
@@ -44,10 +45,10 @@ class Banditron:
             if calculated_label == i:
                 right = 1.0
             for j in range(0,len(feature_vectors)):
-                update_matrix[i][int(feature_vectors[j][0])] = feature_vectors[j][1] * (left - right)
+                update_matrix[i][j] = feature_vectors[j] * (left - right)
         return update_matrix
 
-    def run(self, doc_id, feature_vectors, true_label):
+    def run(self, feature_vectors, true_label):
         self.number_of_rounds += 1.0
         calculated_label = self.predict_label(feature_vectors)
         probabilities = self.calc_probabilities(calculated_label)
@@ -65,8 +66,8 @@ class Banditron:
         label = 0
         for i in range(0,len(self.weights)):
             total = 0.0
-            for eachVector in feature_vectors:
-                total += eachVector[1]*self.weights[i][int(eachVector[0])]
+            for eachVector in range(0,len(feature_vectors)):
+                total += feature_vectors[eachVector]*self.weights[i][eachVector]
             if total >= max:
                 max = total
                 label = i
@@ -91,12 +92,10 @@ class Banditron:
 
 def main():
     banditron = Banditron()
-    doc_ids = banditron.mongo.find({'_id':'doc'})[0]['docs']
-    for t in range(0,len(doc_ids)):
-        doc_id = doc_ids[t]
-        feature_vectors = banditron.mongo.find({'docId':str(doc_id)})['featureList']
-        true_label = get_category_index(banditron.mongo.find({'docId':str(doc_id)})['true_label'])
-        banditron.run(doc_id, feature_vectors, true_label)
+    synsep = SynSep()
+    for t in range(0,100000):
+        feature_vectors, true_label = synsep.generateSynSepData()
+        banditron.run(feature_vectors, true_label)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
     print "Correctly classified: %s" %str(banditron.correct_classified)
