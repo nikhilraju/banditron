@@ -1,6 +1,7 @@
 __author__ = 'nikhilraju'
 
 from pymongo import MongoClient
+import datetime
 
 #Define helper methods here
 
@@ -30,21 +31,40 @@ def create_doc_label_map():
         (label, docId) = line.strip().split(' ')
         doc_labels[docId] = label
 
+    return doc_labels
+
     #685071 entries in this mapping dictionary
+    # coll = MongoClient('localhost',27017)['aml']['features']
+    #
+    # count = 0
+    # for d in doc_labels.keys():
+    #     coll.update({'docId': d}, {'$set': {'true_label': doc_labels[d]}})
+    #     count += 1
+    #     if count%1000 == 0:
+    #         print count, ' documents updated with true labels....', len(doc_labels) - count, ' to go '
+
+
+def create_dataset_docId_list():
     coll = MongoClient('localhost',27017)['aml']['features']
 
-    count = 0
-    for d in doc_labels.keys():
-        coll.update({'docId': d}, {'$set': {'true_label': doc_labels[d]}})
-        count += 1
-        if count%1000 == 0:
-            print count, ' documents updated with true labels....', len(doc_labels) - count, ' to go '
+    allDocs = coll.find({'true_label': {'$exists': 1}})
+
+    dataset_ids = []
+
+    for d in allDocs:
+        dataset_ids.append(d['docId'])
+
+    coll.update({'_id': 2}, {'$set': {'timeStamp':datetime.datetime.now(), 'dataset_list_docIds': dataset_ids }}, True)
+
 
 
 def main():
     #add_document_id_field()
     print 'Adding true labels'
-    create_doc_label_map()
+    #create_doc_label_map()
+
+    create_dataset_docId_list()
+
 if __name__ == "__main__":
     main()
 
