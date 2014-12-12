@@ -44,7 +44,6 @@ class SynSep:
 def main():
 	synsep = SynSep()
 	synsep.createLabel()
-	#print synsep.generateSynSepData()
 
 if __name__=="__main__":
 	main()

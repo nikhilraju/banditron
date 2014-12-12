@@ -8,7 +8,6 @@ from pymongo import MongoClient
 class Banditron:
     feature_set = set()
 
-
     def createDict(self,dir):
         #filepath = '%s/articles/%s/' %(os.getcwd(),dir)
 
