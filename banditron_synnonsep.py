@@ -95,14 +95,22 @@ def main():
     synsep = SynSep()
     error_list = list()
     rounds = list()
-    for t in range(0,100000):
-        feature_vectors, true_label = synsep.generateSynNonSepData()
-        banditron.run(feature_vectors, true_label)
+    rounds_list = []
+    total_rounds = 100000
+    noise = 5000
+    for i in range(0, total_rounds):
+        rounds_list.append(i)
+    sample = set(random.sample(rounds_list, noise))
+    for t in range(0, total_rounds):
+        feature_vectors, true_label = synsep.generateSynSepData()
+        if t in sample:
+            true_label = random.randint(1,9)
+        banditron.run(feature_vectors, true_label-1)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
             rounds.append(banditron.number_of_rounds)
             error_list.append(banditron.error_rate)
-    mongo_plot = MongoClient('160.39.142.43',27017)['aml']['plots']
+    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
     mongo_plot.update({'_id':'synnonsep_banditron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(banditron.correct_classified)
     print "Incorrectly classified: %s" %str(banditron.incorrect_classified)
