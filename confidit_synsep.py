@@ -37,7 +37,7 @@ class Confidit:
     def init_weights(self):
         weights = []
         for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
-            weights.append(matrix([0.0]*self.dict_length))
+            weights.append(matrix([0.0]*self.dict_length).T)
         return weights
 
     def run(self, feature_vectors, true_label):
@@ -56,10 +56,9 @@ class Confidit:
 
     def predict_weight(self, feature_vectors):
         prediction_weight = []
+        feature_vectors_matrix = matrix(feature_vectors)
         for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
-            total = 0.0
-            for eachVector in range(0,len(feature_vectors)):
-                total += feature_vectors[eachVector]*(self.weights[i].item(eachVector))
+            total = (feature_vectors_matrix*self.weights[i]).item(0)
             prediction_weight.append(total)
         return prediction_weight
 
@@ -78,14 +77,14 @@ class Confidit:
         feature_vectors_matrix = matrix(feature_vectors)
         feature_vectors_matrix_transpose = feature_vectors_matrix.T
         for i in range(0, len(SYNSEP_CATEGORY_MAPPING)):
-            temp = self.eta*(feature_vectors_matrix*(self.uncertainty[i].I)*feature_vectors_matrix_transpose).item(0,0)
+            temp = self.eta*((feature_vectors_matrix*(self.uncertainty[i].I)*feature_vectors_matrix_transpose).item(0))
             uncertainty_factor.append(math.sqrt(temp))
         return uncertainty_factor
 
 
     def update_X_vector(self, prediction, predicted_label, feature_vectors):
         X_vector = []
-        feature_vectors_matrix = matrix(feature_vectors)
+        feature_vectors_matrix = matrix(feature_vectors).T
         for i in range(0, len(SYNSEP_CATEGORY_MAPPING)):
             if i is predicted_label:
                 if prediction:
@@ -93,33 +92,33 @@ class Confidit:
                 else:
                     X_vector.append(-feature_vectors_matrix)
             else:
-                X_vector.append(matrix([0.0] * self.dict_length))
+                X_vector.append(matrix([0.0] * self.dict_length).T)
         return X_vector
 
 
     def update_uncertainty(self, X_vector):
         self.previous_uncertainty = self.uncertainty
         for i in range(0, len(SYNSEP_CATEGORY_MAPPING)):
-            self.uncertainty[i] += (X_vector[i].T*X_vector[i])
+            self.uncertainty[i] += (X_vector[i]*(X_vector[i].T))
 
     def update_weights(self, X_vector):
         for i in range(0, len(SYNSEP_CATEGORY_MAPPING)):
             a = self.uncertainty[i].I
             b = self.previous_uncertainty[i]
-            c = self.weights[i].T
-            d = X_vector[i].T
+            c = self.weights[i]
+            d = X_vector[i]
 
-            self.weights[i] = (a*((b*c) + d)).T
+            self.weights[i] = (a*((b*c) + d))
             # self.weights[i] = (self.uncertainty[i].I)*((self.previous_uncertainty[i]*self.weights[i]) + X_vector[i])
 
 
 def main():
     confidit = Confidit()
     synsep = SynSep()
-    for t in range(0,10):
+    for t in range(0,10000):
         feature_vectors, true_label = synsep.generateSynSepData()
         confidit.run(feature_vectors, true_label-1)
-        if ((t+1)%1) == 0:
+        if ((t+1)%10) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(confidit.error_rate))
     print "Correctly classified: %s" %str(confidit.correct_classified)
     print "Incorrectly classified: %s" %str(confidit.incorrect_classified)
