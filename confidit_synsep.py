@@ -35,7 +35,7 @@ class Confidit:
         return uncertainty
 
     def init_weights(self):
-    	weights = []
+        weights = []
         for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
             weights.append(matrix([0.0]*self.dict_length))
         return weights
@@ -64,7 +64,7 @@ class Confidit:
         return prediction_weight
 
     def predict_label(self, prediction_weight, uncertainty_factor):
-    	max = 0.0
+        max = 0.0
         label = 0
         for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
             total = prediction_weight[i] + uncertainty_factor[i]
