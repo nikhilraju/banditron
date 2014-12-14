@@ -7,7 +7,7 @@ SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 class SynSep:
 
 	def __init__(self):
-		self.mongo = MongoClient('160.39.142.43',27017)['aml']['synsep']
+		self.mongo = MongoClient('localhost',27017)['aml']['synsep']
 		self.noOfFeatures = 400
 		self.rareWords = self.init_words(0, 120)
 		self.commonWords = self.init_words(len(self.rareWords), self.noOfFeatures)
@@ -42,11 +42,11 @@ class SynSep:
 				featureVector[i] = 1
 		return featureVector, random_vector
 
-	def generateSynNonSepData(self):
-		featureVector, random_vector = self.generateSynSepData()
-		if(random.randint(0,99) < 5):
-			random_vector = random.randint(1,9)
-		return featureVector, random_vector
+	#def generateSynNonSepData(self):
+	#	featureVector, random_vector = self.generateSynSepData()
+	#	if(random.randint(0,99) < 5):
+	#		random_vector = random.randint(1,9)
+	#	return featureVector, random_vector
 
 def main():
 	synsep = SynSep()
