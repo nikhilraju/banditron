@@ -82,6 +82,7 @@ class Confidit:
             uncertainty_factor.append(math.sqrt(temp))
         return uncertainty_factor
 
+
     def update_X_vector(self, prediction, predicted_label, feature_vectors):
         X_vector = []
         feature_vectors_matrix = matrix(feature_vectors)
