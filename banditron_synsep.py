@@ -1,22 +1,15 @@
 from pymongo import MongoClient
 import random
 from generateSynsep import SynSep
+import datetime
 
-#REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
+
 SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-
-def get_category_index(label):
-    for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
-        if label == SYNSEP_CATEGORY_MAPPING[i]:
-            return i
-    return -1
 
 class Banditron:
 
     def __init__(self):
         self.gamma = 0.014
-        self.mongo = MongoClient('localhost',27017)['aml']['features']
         self.dict_length = 400
         self.weights = self.init_weights()
         self.error_rate = 0.0
@@ -58,6 +51,14 @@ class Banditron:
         else:
             self.incorrect_classified += 1.0
         self.error_rate = self.incorrect_classified/self.number_of_rounds
+        # if self.error_rate <= 0.20:
+        #     self.gamma = 0.01
+        # elif self.error_rate <= 0.40:
+        #     self.gamma = 0.02
+        # elif self.error_rate <= 0.60:
+        #     self.gamma = 0.03
+        # elif self.error_rate <= 0.80:
+        #     self.gamma = 0.04
         update_matrix = self.get_update_matrix(feature_vectors, calculated_label, predicted_label, true_label, probabilities)
         self.update_weights(update_matrix)
 
@@ -93,11 +94,17 @@ class Banditron:
 def main():
     banditron = Banditron()
     synsep = SynSep()
+    error_list = list()
+    rounds = list()
     for t in range(0,100000):
         feature_vectors, true_label = synsep.generateSynSepData()
-        banditron.run(feature_vectors, true_label)
+        banditron.run(feature_vectors, true_label-1)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
+            rounds.append(banditron.number_of_rounds)
+            error_list.append(banditron.error_rate)
+    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot.update({'_id':'synsep_banditron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(banditron.correct_classified)
     print "Incorrectly classified: %s" %str(banditron.incorrect_classified)
     print "Error Rate: %s" %str(banditron.error_rate)
