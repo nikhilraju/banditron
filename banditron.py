@@ -2,8 +2,6 @@ from pymongo import MongoClient
 import random
 
 REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
-#SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-#SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def get_category_index(label):
     for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
@@ -91,7 +89,7 @@ class Banditron:
 
 def main():
     banditron = Banditron()
-    doc_ids = banditron.mongo.find({'_id':'doc'})[0]['docs']
+    doc_ids = banditron.mongo.find({'_id':2})[0]['dataset_list_docIds']
     for t in range(0,len(doc_ids)):
         doc_id = doc_ids[t]
         feature_vectors = banditron.mongo.find({'docId':str(doc_id)})['featureList']

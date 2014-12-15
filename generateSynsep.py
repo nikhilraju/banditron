@@ -42,11 +42,17 @@ class SynSep:
 				featureVector[i] = 1
 		return featureVector, random_vector
 
-	#def generateSynNonSepData(self):
-	#	featureVector, random_vector = self.generateSynSepData()
-	#	if(random.randint(0,99) < 5):
-	#		random_vector = random.randint(1,9)
-	#	return featureVector, random_vector
+	def generateSynNonSepData(self):
+		featureVector, random_vector = self.generateSynSepData()
+		temp_list = list(range(0, self.noOfFeatures))
+		sample = set(random.sample(temp_list, (5*self.noOfFeatures)/100))
+		for i in range(0, self.noOfFeatures):
+			if i in sample:
+				if featureVector[i] is 1:
+					featureVector[i] = 0
+				else:
+					featureVector[i] = 1
+		return featureVector, random_vector
 
 def main():
 	synsep = SynSep()

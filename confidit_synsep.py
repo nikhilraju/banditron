@@ -107,19 +107,23 @@ class Confidit:
             b = self.previous_uncertainty[i]
             c = self.weights[i]
             d = X_vector[i]
-
             self.weights[i] = (a*((b*c) + d))
-            # self.weights[i] = (self.uncertainty[i].I)*((self.previous_uncertainty[i]*self.weights[i]) + X_vector[i])
 
 
 def main():
     confidit = Confidit()
     synsep = SynSep()
+    error_list = list()
+    rounds = list()
     for t in range(0,10000):
         feature_vectors, true_label = synsep.generateSynSepData()
         confidit.run(feature_vectors, true_label-1)
         if ((t+1)%10) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(confidit.error_rate))
+            rounds.append(confidit.number_of_rounds)
+            error_list.append(confidit.error_rate)
+    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot.update({'_id':'synsep_confidit'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(confidit.correct_classified)
     print "Incorrectly classified: %s" %str(confidit.incorrect_classified)
     print "Error Rate: %s" %str(confidit.error_rate)
