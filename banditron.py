@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import random
+import datetime
 
 REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
 #SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
@@ -91,17 +92,31 @@ class Banditron:
 
 def main():
     banditron = Banditron()
-    doc_ids = banditron.mongo.find({'_id':'doc'})[0]['docs']
+    doc_ids = banditron.mongo.find({'_id': 2})[0]['dataset_list_docIds']
+    count = 0
+    error_list = list()
+    rounds = list()
+
     for t in range(0,len(doc_ids)):
         doc_id = doc_ids[t]
-        feature_vectors = banditron.mongo.find({'docId':str(doc_id)})['featureList']
-        true_label = get_category_index(banditron.mongo.find({'docId':str(doc_id)})['true_label'])
+        feature_vectors = banditron.mongo.find({'docId':str(doc_id)})[0]['featureList']
+        true_label = get_category_index(banditron.mongo.find({'docId':str(doc_id)})[0]['true_label'])
         banditron.run(doc_id, feature_vectors, true_label)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
+            rounds.append(banditron.number_of_rounds)
+            error_list.append(banditron.error_rate)
+        count += 1
+
+        if count > 100000:
+            break
+
+    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot.update({'_id':'reuters_banditron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(banditron.correct_classified)
     print "Incorrectly classified: %s" %str(banditron.incorrect_classified)
     print "Error Rate: %s" %str(banditron.error_rate)
+
 
 if __name__=="__main__":
     main()
