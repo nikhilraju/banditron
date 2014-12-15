@@ -47,8 +47,7 @@ def create_doc_label_map():
 def create_dataset_docId_list():
     coll = MongoClient('localhost',27017)['aml']['features']
 
-    allDocs = coll.find({'true_label': {'$exists': 1}})
-
+    allDocs = coll.find({'docId': {'$exists': 1}})
     dataset_ids = []
 
     for d in allDocs:
@@ -60,9 +59,9 @@ def create_dataset_docId_list():
 
 def main():
     #add_document_id_field()
-    print 'Adding true labels'
+    #print 'Adding true labels'
     #create_doc_label_map()
-
+    print 'Adding docId list'
     create_dataset_docId_list()
 
 if __name__ == "__main__":

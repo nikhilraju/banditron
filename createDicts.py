@@ -52,7 +52,7 @@ class Banditron:
 
 
         # Hardcoded and  change the value of dir to test0 etc to write these documents to Mongo
-        dir = 'train'
+        dir = 'test010'
         if dir == 'train':
             dataPointLabel ='train'
         else:
@@ -74,7 +74,7 @@ class Banditron:
                 count += 1
                 currDocDictionary = defaultdict(float)
 
-                if count % 10 == 0:
+                if count % 1000 == 0:
                     print 'Feature Vectors for ', count, ' articles done \n'
 
                 # This if is added to handle the file test000 which is a blank file
