@@ -2,9 +2,12 @@ from pymongo import MongoClient
 import random
 from generateSynsep import SynSep
 from numpy import matrix
+from numpy import linalg
+from numpy import inner
+from numpy import kron
 import datetime
 import math
-import numpy
+
 
 SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
@@ -60,10 +63,10 @@ class Newtron:
         else:
             self.incorrect_classified += 1.0
         self.error_rate = self.incorrect_classified/self.number_of_rounds
-        X_vector = self.update_X_vector(true_label == predicted_label, predicted_label, feature_vectors, probabilities, prediction_weight)
-        self.update_A(X_vector)
-        self.update_B()
-        self.update_weights(X_vector)
+        estimator = self.get_estimator(true_label == predicted_label, predicted_label, feature_vectors, probabilities, prediction_weight)
+        self.update_A(estimator)
+        self.update_B(estimator)
+        self.update_weights()
 
     def predict_label(self, feature_vectors):
         max = 0.0
@@ -98,26 +101,34 @@ class Newtron:
             number -= probabilities[i]
         return len(probabilities)-1
 
-    def update_X_vector(self, prediction, predicted_label, feature_vectors, probabilities, prediction_weight):
-    	X_vector = []
+    def get_estimator(self, prediction, predicted_label, feature_vectors, probabilities, prediction_weight):
+    	estimator = matrix()
+        a = 1.0/len(SYNSEP_CATEGORY_MAPPING)
+        unit_vector = [a]*len(SYNSEP_CATEGORY_MAPPING)
+        e = [0.0]*len(SYNSEP_CATEGORY_MAPPING)
+        e[predicted_label] = 1.0
+        left = 0.0
+        right = matrix()
         if prediction:
         	self.k = probabilities[predicted_label]
-        	constant = ((1 - prediction_weight[predicted_label])/probabilities[predicted_label])*((1.0/len(SYNSEP_CATEGORY_MAPPING)) - e[predicted_label])
+            left = (1 - prediction_weight[predicted_label])/probabilities[predicted_label]
+            right = matrix(unit_vector - e)
         else:
         	self.k = 1.0
-        	constant = (prediction_weight[predicted_label]/probabilities[predicted_label])*(e[predicted_label] - (1.0/len(SYNSEP_CATEGORY_MAPPING)))
+            left = prediction_weight[predicted_label]/probabilities[predicted_label]
+            right = matrix(e - unit_vector)
+        estimator = matrix(kron(inner(left,right),matrix(feature_vectors)))
+        return estimator
 
+    def update_A(self, estimator):
+    	self.A += (self.k*self.beta*(estimator*(estimator.T)))
 
-    def update_A(self, X_vector):
-    	self.A += (self.k*self.beta*(X_vector*(X_vector.T)))
-
-   	def update_B(self):
-
-
+   	def update_B(self, estimator):
+        self.B += (1 - (self.k*self.beta*inner(estimator,self.weights)))*estimator
 
    	def update_weights(self):
    		half_weights = -((self.A.I)*self.B)
-   		weight_norm = numpy.linalg.norm(half_weights)
+   		weight_norm = linalg.norm(half_weights)
    		if weight_norm <= self.D:
    			self.weights = half_weights
    		else:
@@ -127,7 +138,7 @@ class Newtron:
 def main():
     newtron = Newtron()
     synsep = SynSep()
-    for t in range(0,10000):
+    for t in range(0,1000):
         feature_vectors, true_label = synsep.generateSynSepData()
         newtron.run(feature_vectors, true_label-1)
         if ((t+1)%10) == 0:

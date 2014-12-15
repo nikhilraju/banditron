@@ -115,10 +115,10 @@ def main():
     synsep = SynSep()
     error_list = list()
     rounds = list()
-    for t in range(0,10000):
+    for t in range(0,100000):
         feature_vectors, true_label = synsep.generateSynSepData()
         confidit.run(feature_vectors, true_label-1)
-        if ((t+1)%10) == 0:
+        if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(confidit.error_rate))
             rounds.append(confidit.number_of_rounds)
             error_list.append(confidit.error_rate)
