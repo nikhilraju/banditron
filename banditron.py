@@ -3,8 +3,6 @@ import random
 import datetime
 
 REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
-#SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
-#SYNNONSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 def get_category_index(label):
     for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
@@ -96,6 +94,7 @@ def main():
     count = 0
     error_list = list()
     rounds = list()
+
 
     for t in range(0,len(doc_ids)):
         doc_id = doc_ids[t]
