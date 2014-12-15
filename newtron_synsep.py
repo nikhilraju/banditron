@@ -16,8 +16,7 @@ SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 class Newtron:
 
     def __init__(self):
-        self.alpha = 10.0
-
+        self.alpha = 10.01
         self.gamma = 0.01
         self.beta = 0.01
         self.D = 1.0
@@ -105,13 +104,11 @@ class Newtron:
         return len(probabilities)-1
 
     def get_estimator(self, prediction, predicted_label, feature_vectors, probabilities, prediction_weight):
-    	#estimator = matrix()
         a = 1.0/len(SYNSEP_CATEGORY_MAPPING)
         unit_vector = [a]*len(SYNSEP_CATEGORY_MAPPING)
         e = [0.0]*len(SYNSEP_CATEGORY_MAPPING)
         e[predicted_label] = 1.0
         left = 0.0
-        #right = matrix()
         if prediction:
             self.k = probabilities[predicted_label]
             left = (1 - prediction_weight[predicted_label])/probabilities[predicted_label]
@@ -120,10 +117,7 @@ class Newtron:
             self.k = 1.0
             left = prediction_weight[predicted_label]/probabilities[predicted_label]
             right = matrix([e[i] - unit_vector[i] for i in range(0,len(SYNSEP_CATEGORY_MAPPING))])
-        #t1 = matrix(inner(left,right)).T
-        #t2 = matrix(feature_vectors)
-        #t3 = matrix(kron(t1,t2))
-        estimator = matrix(kron(matrix(inner(left,right)).T,matrix(feature_vectors)))
+        estimator = matrix(kron(left*right.T,matrix(feature_vectors)))
         return estimator
 
     def update_A(self, estimator):
@@ -132,11 +126,7 @@ class Newtron:
     def update_B(self, estimator):
         labels = len(SYNSEP_CATEGORY_MAPPING)
         oneMatrix = matrix(ones((labels,labels),dtype=npfloat))
-
-        #t1 = estimator
-        #t2 = inner(estimator,self.weights)
-
-        self.B += (oneMatrix - (self.k*self.beta*matrix(inner(estimator,self.weights))))*estimator
+        self.B += (oneMatrix - (self.k*self.beta*dot(matrix.flatten(estimator),matrix.flatten(self.weights).T).item(0)))*estimator
 
     def update_weights(self):
    		half_weights = -((self.A.I)*self.B)

@@ -51,14 +51,6 @@ class Banditron:
         else:
             self.incorrect_classified += 1.0
         self.error_rate = self.incorrect_classified/self.number_of_rounds
-        # if self.error_rate <= 0.20:
-        #     self.gamma = 0.01
-        # elif self.error_rate <= 0.40:
-        #     self.gamma = 0.02
-        # elif self.error_rate <= 0.60:
-        #     self.gamma = 0.03
-        # elif self.error_rate <= 0.80:
-        #     self.gamma = 0.04
         update_matrix = self.get_update_matrix(feature_vectors, calculated_label, predicted_label, true_label, probabilities)
         self.update_weights(update_matrix)
 
