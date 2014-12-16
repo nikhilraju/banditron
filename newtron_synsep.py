@@ -7,6 +7,7 @@ from numpy import inner
 from numpy import kron
 from numpy import ones
 from numpy import float as npfloat
+from numpy import dot
 import datetime
 import math
 
@@ -77,7 +78,7 @@ class Newtron:
         cumulative_total = 0.0
         feature_vectors_matrix = matrix(feature_vectors).T
         for i in range(0,len(SYNSEP_CATEGORY_MAPPING)):
-            total = math.exp(((self.alpha*self.weights[i])*feature_vectors_matrix).item(0))
+            total = math.exp(dot((self.alpha*self.weights[i]),feature_vectors_matrix).item(0))
             cumulative_total += total
             prediction_weight.append(total)
             if total >= max:
@@ -108,7 +109,6 @@ class Newtron:
         unit_vector = [a]*len(SYNSEP_CATEGORY_MAPPING)
         e = [0.0]*len(SYNSEP_CATEGORY_MAPPING)
         e[predicted_label] = 1.0
-        left = 0.0
         if prediction:
             self.k = probabilities[predicted_label]
             left = (1 - prediction_weight[predicted_label])/probabilities[predicted_label]
@@ -125,8 +125,7 @@ class Newtron:
 
     def update_B(self, estimator):
         labels = len(SYNSEP_CATEGORY_MAPPING)
-        oneMatrix = matrix(ones((labels,labels),dtype=npfloat))
-        self.B += (oneMatrix - (self.k*self.beta*dot(matrix.flatten(estimator),matrix.flatten(self.weights).T).item(0)))*estimator
+        self.B += (1 - (self.k*self.beta*dot(matrix.flatten(estimator),matrix.flatten(self.weights).T).item(0)))*estimator
 
     def update_weights(self):
    		half_weights = -((self.A.I)*self.B)
@@ -140,11 +139,17 @@ class Newtron:
 def main():
     newtron = Newtron()
     synsep = SynSep()
+    error_list = list()
+    rounds = list()
     for t in range(0,100000):
         feature_vectors, true_label = synsep.generateSynSepData()
         newtron.run(feature_vectors, true_label-1)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(newtron.error_rate))
+            rounds.append(newtron.number_of_rounds)
+            error_list.append(newtron.error_rate)
+    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot.update({'_id':'synsep_newtron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(newtron.correct_classified)
     print "Incorrectly classified: %s" %str(newtron.incorrect_classified)
     print "Error Rate: %s" %str(newtron.error_rate)
