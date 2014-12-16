@@ -50,14 +50,6 @@ class Banditron:
         else:
             self.incorrect_classified += 1.0
         self.error_rate = self.incorrect_classified/self.number_of_rounds
-        # if self.error_rate <= 0.20:
-        #     self.gamma = 0.01
-        # elif self.error_rate <= 0.40:
-        #     self.gamma = 0.02
-        # elif self.error_rate <= 0.60:
-        #     self.gamma = 0.03
-        # elif self.error_rate <= 0.80:
-        #     self.gamma = 0.04
         update_matrix = self.get_update_matrix(feature_vectors, calculated_label, predicted_label, true_label, probabilities)
         self.update_weights(update_matrix)
 
@@ -95,16 +87,13 @@ def main():
     synsep = SynSep()
     error_list = list()
     rounds = list()
-    rounds_list = []
     total_rounds = 100000
-    noise = 5000
-    for i in range(0, total_rounds):
-        rounds_list.append(i)
-    sample = set(random.sample(rounds_list, noise))
+    label_noise = list(range(0, total_rounds))
+    label_noise_sample = set(random.sample(label_noise, total_rounds/20))
     for t in range(0, total_rounds):
         feature_vectors, true_label = synsep.generateSynSepData()
-        if t in sample:
-            true_label = random.randint(1,9)
+        if t in label_noise_sample:
+            true_label = random.randint(1,len(SYNSEP_CATEGORY_MAPPING))
         banditron.run(feature_vectors, true_label-1)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
