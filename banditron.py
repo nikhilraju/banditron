@@ -46,7 +46,7 @@ class Banditron:
                 update_matrix[i][int(feature_vectors[j][0])] = feature_vectors[j][1] * (left - right)
         return update_matrix
 
-    def run(self, doc_id, feature_vectors, true_label):
+    def run(self, feature_vectors, true_label):
         self.number_of_rounds += 1.0
         calculated_label = self.predict_label(feature_vectors)
         probabilities = self.calc_probabilities(calculated_label)
@@ -94,19 +94,16 @@ def main():
     count = 0
     error_list = list()
     rounds = list()
-
-
     for t in range(0,len(doc_ids)):
         doc_id = doc_ids[t]
         feature_vectors = banditron.mongo.find({'docId':str(doc_id)})[0]['featureList']
         true_label = get_category_index(banditron.mongo.find({'docId':str(doc_id)})[0]['true_label'])
-        banditron.run(doc_id, feature_vectors, true_label)
+        banditron.run(feature_vectors, true_label)
         if ((t+1)%1000) == 0:
             print "%s rounds completed with error rate %s" %(str(t+1),str(banditron.error_rate))
             rounds.append(banditron.number_of_rounds)
             error_list.append(banditron.error_rate)
         count += 1
-
         if count > 100000:
             break
 

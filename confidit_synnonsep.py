@@ -128,7 +128,7 @@ def main():
             rounds.append(confidit.number_of_rounds)
             error_list.append(confidit.error_rate)
     mongo_plot = MongoClient('localhost',27017)['aml']['plots']
-    mongo_plot.update({'_id':'synsep_confidit'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
+    mongo_plot.update({'_id':'synnonsep_confidit'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(confidit.correct_classified)
     print "Incorrectly classified: %s" %str(confidit.incorrect_classified)
     print "Error Rate: %s" %str(confidit.error_rate)

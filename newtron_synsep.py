@@ -17,7 +17,7 @@ SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 class Newtron:
 
     def __init__(self):
-        self.alpha = 10.01
+        self.alpha = 10.0
         self.gamma = 0.01
         self.beta = 0.01
         self.D = 1.0

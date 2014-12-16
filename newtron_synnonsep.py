@@ -17,8 +17,8 @@ SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 class Newtron:
 
     def __init__(self):
-        self.alpha = 10.01
-        self.gamma = 0.01
+        self.alpha = 10.0
+        self.gamma = 0.006
         self.beta = 0.01
         self.D = 1.0
         self.dict_length = 400
@@ -154,7 +154,7 @@ def main():
             rounds.append(newtron.number_of_rounds)
             error_list.append(newtron.error_rate)
     mongo_plot = MongoClient('localhost',27017)['aml']['plots']
-    mongo_plot.update({'_id':'synsep_newtron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
+    mongo_plot.update({'_id':'synnonsep_newtron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(newtron.correct_classified)
     print "Incorrectly classified: %s" %str(newtron.incorrect_classified)
     print "Error Rate: %s" %str(newtron.error_rate)
