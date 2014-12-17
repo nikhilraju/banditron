@@ -7,7 +7,7 @@ SYNSEP_CATEGORY_MAPPING = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 class SynSep:
 
 	def __init__(self):
-		self.mongo = MongoClient('localhost',27017)['aml']['synsep']
+		self.mongo = MongoClient('160.39.8.119',27017)['aml']['synsep']
 		self.noOfFeatures = 400
 		self.rareWords = self.init_words(0, 120)
 		self.commonWords = self.init_words(len(self.rareWords), self.noOfFeatures)

@@ -21,6 +21,12 @@ from scipy.sparse.linalg import inv as sparse_inv
 
 REUTERS_CATEGORY_MAPPING = ['CCAT', 'ECAT', 'MCAT', 'GCAT']
 
+def get_category_index(label):
+    for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
+        if label == REUTERS_CATEGORY_MAPPING[i]:
+            return i
+    return -1
+
 class Newtron:
 
     def __init__(self):
@@ -28,7 +34,7 @@ class Newtron:
         self.gamma = 0.05
         self.beta = 0.0001
         self.D = 1.0
-        self.mongo = MongoClient('localhost',27017)['aml']['features']
+        self.mongo = MongoClient('160.39.8.119',27017)['aml']['features']
         self.dict = self.mongo.find({'_id':'1'})[0]['featureList']
         self.dict_length = len(self.dict)
         self.A = self.init_A()
@@ -41,24 +47,11 @@ class Newtron:
         self.number_of_rounds = 0.0
 
     def init_weights(self):
-        #weights = []
-        #for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-        #    weights.append([0.0]*self.dict_length)
-        #weight_matrix = matrix(weights)
-        #return weight_matrix
         weights = csr_matrix((len(REUTERS_CATEGORY_MAPPING),self.dict_length),dtype=npfloat)
         return weights
 
     def init_A(self):
-        #A = []
         constant = 1.0/self.D
-        #for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-        #    inner_A = []
-        #    inner_A = [0.0]*len(REUTERS_CATEGORY_MAPPING)
-        #    inner_A[i] = constant
-        #    A.append(inner_A)
-        #A_matrix = matrix(A)
-        #return A_matrix
         indexes = list(range(0,len(REUTERS_CATEGORY_MAPPING)))
         val = []
         for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
@@ -67,11 +60,6 @@ class Newtron:
         return A
 
     def init_B(self):
-        #B = []
-        #for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-        #    B.append([0.0]*self.dict_length)
-        #B_matrix = matrix(B)
-        #return B_matrix
         B = csr_matrix((len(REUTERS_CATEGORY_MAPPING),self.dict_length),dtype=npfloat)
         return B
 
@@ -85,7 +73,7 @@ class Newtron:
         else:
             self.incorrect_classified += 1.0
         self.error_rate = self.incorrect_classified/self.number_of_rounds
-        estimator = self.get_estimator(true_label == predicted_label, predicted_label, feature_vectors, probabilities, prediction_weight)
+        estimator = self.get_estimator(true_label == predicted_label, predicted_label, feature_sparse, probabilities, prediction_weight)
         self.update_A(estimator)
         self.update_B(estimator)
         self.update_weights()
@@ -97,7 +85,7 @@ class Newtron:
         cumulative_total = 0.0
         feature_vectors_sparse = csr_matrix.transpose(feature_sparse)
         for i in range(0,len(REUTERS_CATEGORY_MAPPING)):
-            total = math.exp(self.alpha*csr_matrix.dot(self.weights[i],feature_vectors_matrix).todense().item(0))
+            total = math.exp(self.alpha*csr_matrix.dot(self.weights[i],feature_vectors_sparse).todense().item(0))
             cumulative_total += total
             prediction_weight.append(total)
             if total >= max:
@@ -137,14 +125,14 @@ class Newtron:
             left = prediction_weight[predicted_label]/probabilities[predicted_label]
             right = matrix([e[i] - unit_vector[i] for i in range(0,len(REUTERS_CATEGORY_MAPPING))])
         estimator = sparse_kron(left*csr_matrix(right.T),feature_sparse)
-        return estimator
+        return csr_matrix(estimator)
 
     def update_A(self, estimator):
-    	self.A += (self.k*self.beta*(estimator*(csr_matrix.transpose(estimator))))
+    	self.A = self.A + ((self.k*self.beta)*(estimator*(csr_matrix.transpose(estimator))))
 
     def update_B(self, estimator):
         labels = len(REUTERS_CATEGORY_MAPPING)
-        self.B += (1 - (self.k*self.beta*dot(matrix.flatten(estimator.todense()),matrix.flatten(csr_matrix.transpose(self.weights).todense())).item(0)))*estimator
+        self.B = self.B + ((1 - (self.k*self.beta*dot(matrix.flatten(estimator.todense()),matrix.flatten(csr_matrix.transpose(self.weights).todense()).T).item(0)))*estimator)
 
     def update_weights(self):
    		half_weights = -((sparse_inv(self.A))*self.B)
@@ -157,7 +145,7 @@ class Newtron:
 
 def main():
     newtron = Newtron()
-    doc_ids = banditron.mongo.find({'_id': 2})[0]['dataset_list_docIds']
+    doc_ids = newtron.mongo.find({'_id': 2})[0]['dataset_list_docIds']
     count = 0
     error_list = list()
     rounds = list()
@@ -168,7 +156,7 @@ def main():
         x = [0]*len(feature_vectors)
         y = []
         val = []
-        for i in features:
+        for i in feature_vectors:
             y.append(i[0])
             val.append(i[1])
         feature_sparse = sparse.coo_matrix((val,(x,y)),shape=(1,newtron.dict_length)).tocsr()
@@ -181,7 +169,7 @@ def main():
         if count > 100000:
             break
 
-    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot = MongoClient('160.39.8.119',27017)['aml']['plots']
     mongo_plot.update({'_id':'reuters_newtron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(newtron.correct_classified)
     print "Incorrectly classified: %s" %str(newtron.incorrect_classified)

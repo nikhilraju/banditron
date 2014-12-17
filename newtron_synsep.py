@@ -125,7 +125,7 @@ class Newtron:
 
     def update_B(self, estimator):
         labels = len(SYNSEP_CATEGORY_MAPPING)
-        self.B += (1 - (self.k*self.beta*dot(matrix.flatten(estimator),matrix.flatten(self.weights).T).item(0)))*estimator
+        self.B += (1 - (self.k*self.beta*dot(matrix.flatten(estimator),matrix.flatten(self.weights.T).T).item(0)))*estimator
 
     def update_weights(self):
    		half_weights = -((self.A.I)*self.B)
@@ -148,7 +148,7 @@ def main():
             print "%s rounds completed with error rate %s" %(str(t+1),str(newtron.error_rate))
             rounds.append(newtron.number_of_rounds)
             error_list.append(newtron.error_rate)
-    mongo_plot = MongoClient('localhost',27017)['aml']['plots']
+    mongo_plot = MongoClient('160.39.8.119',27017)['aml']['plots']
     mongo_plot.update({'_id':'synsep_newtron'},{'$set':{'timeStamp':datetime.datetime.now(),'rounds':rounds,'error_rate':error_list}},True)
     print "Correctly classified: %s" %str(newtron.correct_classified)
     print "Incorrectly classified: %s" %str(newtron.incorrect_classified)
